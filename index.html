@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>d3 TD</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+
+        text {
+            font-family: Verdana,serif;
+        }
+
+        #graph1 {
+            display: block;
+            width: 700px;
+            height: 600px;
+            border: 1px solid black;
+        }
+
+        #legend {
+            width: 700px;
+            height: 120px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<svg id="graph1" width="700" height="600"></svg>
+<svg id="legend" width="700" height="120"></svg>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+    "use strict";
+    /**
+     *  Entry point
+     */
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+
+    function generateCoordinates(center, radius, angle) {
+        return [Math.floor(Math.cos((Math.PI/2)-angle)*radius+center[0]), Math.floor(Math.sin((Math.PI/2)-angle)*radius+center[1])];
+    }
+
+    function map(x) {
+        const y1 = 255;
+        const x2 = 20;
+        if (x > 20)
+            return 0;
+        return -y1/x2*x + y1;
+    }
+
+
+    let personsPositions = {};
+    let personsColors = {};
+    let personsAges = {};
+    const svgContainer = d3.select("#graph1");
+    const circleRadius = 10;
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const width = 700;
+        const height = 600;
+
+        const center = [width / 2, height / 2];
+
+        let db;
+        let persons, links, family_links;
+
+        const radius = 250;
+
+        let legend = d3.select("#legend");
+        legend.append("text")
+            .attr("fill", "black")
+            .attr("x", "20")
+            .attr("y", "25")
+            .style("font-weight", "bold")
+            .text("Légende :");
+
+        legend.append("line")
+            .attr("x1", "20")
+            .attr("x2", "70")
+            .attr("y1", "60")
+            .attr("y2", "60")
+            .attr("stroke", "blue");
+
+        legend.append("text")
+            .attr("fill", "blue")
+            .attr("x", "90")
+            .attr("y", "63")
+            .style("font-size", "11")
+            .text("Relation de travail");
+
+        legend.append("line")
+            .attr("x1", "20")
+            .attr("x2", "70")
+            .attr("y1", "100")
+            .attr("y2", "100")
+            .attr("stroke", "green");
+
+        legend.append("text")
+            .attr("fill", "green")
+            .attr("x", "90")
+            .attr("y", "103")
+            .style("font-size", "11")
+            .text("Voisins");
+
+        legend.append("line")
+            .attr("x1", "220")
+            .attr("x2", "270")
+            .attr("y1", "60")
+            .attr("y2", "60")
+            .attr("stroke", "red");
+
+        legend.append("text")
+            .attr("fill", "red")
+            .attr("x", "290")
+            .attr("y", "63")
+            .style("font-size", "11")
+            .text("Ex");
+
+        legend.append("line")
+            .attr("x1", "220")
+            .attr("x2", "270")
+            .attr("y1", "100")
+            .attr("y2", "100")
+            .attr("stroke", "rgb(247, 164, 255)");
+
+        legend.append("text")
+            .attr("fill", "rgb(247, 164, 255)")
+            .attr("x", "290")
+            .attr("y", "103")
+            .style("font-size", "11")
+            .text("Conjoint");
+
+        legend.append("line")
+            .attr("x1", "360")
+            .attr("x2", "410")
+            .attr("y1", "60")
+            .attr("y2", "60")
+            .attr("stroke", "rgb(0, 216, 209)");
+
+        legend.append("text")
+            .attr("fill", "rgb(0, 216, 209)")
+            .attr("x", "430")
+            .attr("y", "63")
+            .style("font-size", "11")
+            .text("Enfant");
+
+        legend.append("line")
+            .attr("x1", "360")
+            .attr("x2", "410")
+            .attr("y1", "100")
+            .attr("y2", "100")
+            .attr("stroke", "rgb(255, 188, 0)");
+
+        legend.append("text")
+            .attr("fill", "rgb(255, 188, 0)")
+            .attr("x", "430")
+            .attr("y", "103")
+            .style("font-size", "11")
+            .text("Soeur");
+
+        let gradient = legend.append("linearGradient")
+            .attr("x1", "510")
+            .attr("x2", "660")
+            .attr("y1", "70")
+            .attr("y2", "70")
+            .attr("id", "gradient")
+            .attr("gradientUnits", "userSpaceOnUse");
+
+        gradient
+            .append("stop")
+            .attr("offset", "0")
+            .attr("stop-color", "rgb(0,0,0)");
+
+        gradient
+            .append("stop")
+            .attr("offset", "0.5")
+            .attr("stop-color", "rgb(255,0,0)");
+
+        legend.append("rect")
+            .attr("x", "510")
+            .attr("y", "70")
+            .attr("width", "150")
+            .attr("height", "20")
+            .attr("fill", "url(#gradient)");
+
+        legend.append("text")
+            .attr("fill", "black")
+            .attr("x", "510")
+            .attr("y", "100")
+            .style("font-size", "10")
+            .style("font-weight", "bold")
+            .text("> 20");
+
+        legend.append("text")
+            .attr("fill", "black")
+            .attr("x", "655")
+            .attr("y", "100")
+            .style("font-size", "10")
+            .style("font-weight", "bold")
+            .text("0");
+
+        legend.append("text")
+            .attr("fill", "black")
+            .style("text-anchor", "middle")
+            .attr("x", "585")
+            .attr("y", "45")
+            .style("font-size", "12")
+            .text("Ecart de taille");
+
+        legend.append("text")
+            .attr("fill", "black")
+            .style("text-anchor", "middle")
+            .attr("x", "585")
+            .attr("y", "60")
+            .style("font-size", "12")
+            .text("avec la victime (cm)");
+
+
+        d3.json("ressources/db.json").then((data) => {
+            db = data;
+            persons = data["persons"];
+            links = data["links"];
+            family_links = data["family-links"];
+            let victimeName;
+            let victimHeight;
+            let angle = 0;
+            for (let person of persons) {
+
+                let coordinates;
+                if (person.role === "victime") {
+                    coordinates = center;
+                    victimeName = person.name;
+                    victimHeight = person.taille;
+                }
+                else {
+                    coordinates = generateCoordinates(center, radius, angle);
+                    angle += (2*Math.PI)/(persons.length-1); // -1 to remove the victim who is placed in the center
+                }
+
+                personsPositions[person.name] = coordinates;
+
+                // STORING COLOR DEPENDING ON HEIGHT
+                const heightDelta = Math.abs(person.taille - victimHeight);
+                personsColors[person.name] = map(heightDelta);
+
+                // STORING AGE
+                personsAges[person.name] = person.age;
+
+            }
+
+            for (let link of links) {
+                let line = svgContainer.append("line")
+                    .attr("x1", personsPositions[link.source][0])
+                    .attr("x2", personsPositions[link.target][0])
+                    .attr("y1", personsPositions[link.source][1])
+                    .attr("y2", personsPositions[link.target][1])
+                    .attr("stroke", "black");
+                if (link.relation === "travail")
+                    line.attr("stroke", "blue");
+                else if (link.relation === "voisin")
+                    line.attr("stroke", "green");
+                if (link.source === victimeName || link.target === victimeName)
+                    line.attr("stroke-width", "3");
+            }
+
+            for (let link of family_links) {
+                let line = svgContainer.append("line")
+                    .attr("x1", personsPositions[link.source][0])
+                    .attr("x2", personsPositions[link.target][0])
+                    .attr("y1", personsPositions[link.source][1])
+                    .attr("y2", personsPositions[link.target][1])
+                    .attr("stroke", "black");
+                if (link.relation === "ex")
+                    line.attr("stroke", "red");
+                else if (link.relation === "conjoint")
+                    line.attr("stroke", "rgb(247, 164, 255)");
+                else if (link.relation === "enfant")
+                    line.attr("stroke", "rgb(0, 216, 209)");
+                else if (link.relation === "soeur")
+                    line.attr("stroke", "rgb(255, 188, 0)");
+                if (link.source === victimeName || link.target === victimeName)
+                    line.attr("stroke-width", "3");
+            }
+
+            for (let personName in personsPositions) {
+                const coordinates = personsPositions[personName];
+                let circle = svgContainer.append("circle")
+                    .attr("cx", coordinates[0])
+                    .attr("cy", coordinates[1])
+                    .attr("r", circleRadius)
+                    .attr("stroke", "black")
+                    .attr("fill", function () {
+                        return d3.rgb(personsColors[personName], 0, 0);
+                    })
+                    .on("mouseover", function() {
+                        d3.select("#"+personName).style("visibility", "visible");
+                        d3.select("#"+personName+"_tag").style("visibility", "visible");
+                        d3.select("#"+personName+"_age").style("visibility", "visible");
+                        d3.select(this).style("cursor", "pointer");
+                    })
+                    .on("mouseleave", function() {
+                        d3.select("#"+personName).style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag").style("visibility", "hidden");
+                        d3.select("#"+personName+"_age").style("visibility", "hidden");
+                        d3.select(this).style("cursor", "default");
+                    });
+            }
+
+            for (let personName in personsPositions) {
+                const coordinates = personsPositions[personName];
+                let tooltip = svgContainer.append("rect")
+                    .attr("x", coordinates[0] - 40)
+                    .attr("y", coordinates[1] - 60)
+                    .attr("height", 40)
+                    .attr("width", 80)
+                    .attr("fill", "rgb(190, 190, 190)")
+                    .attr("stroke", "black")
+                    .style("visibility", "hidden")
+                    .attr("id", personName);
+                let nametag = svgContainer.append("text")
+                    .attr("x", coordinates[0])
+                    .attr("y", coordinates[1] - 46)
+                    .attr("fill", "black")
+                    .text(personName)
+                    .attr("id", function() {return personName+"_tag"})
+                    .style("visibility", "hidden")
+                    .style("font-size", 12)
+                    .style("text-anchor", "middle");
+                let agetag = svgContainer.append("text")
+                    .attr("x", coordinates[0])
+                    .attr("y", coordinates[1] - 26)
+                    .attr("fill", "black")
+                    .text(personsAges[personName]+ " ans")
+                    .attr("id", function() {return personName+"_age"})
+                    .style("visibility", "hidden")
+                    .style("font-size", 12)
+                    .style("text-anchor", "middle");
+            }
+
+        });
+    })
+</script>
+</body>
+</html>
