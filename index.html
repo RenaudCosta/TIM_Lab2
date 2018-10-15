@@ -25,11 +25,44 @@
             height: 120px;
             border: 1px solid black;
         }
+
+        #legend2 {
+            width: 120px;
+            height: 400px;
+            border: 1px solid black;
+            position: absolute;
+            top: 0;
+            left: 1365px;
+        }
+
+        #graph2 {
+            display: inline-block;
+            position: absolute;
+            top: 0;
+            left: 713px;
+            width: 650px;
+            height: 400px;
+            border: 1px solid black;
+        }
+
+        #graph3 {
+            position: absolute;
+            top: 413px;
+            left: 713px;
+            border: 1px solid black;
+            height: 309px;
+            width: 650px;
+        }
+
     </style>
 </head>
 <body>
 <svg id="graph1" width="700" height="600"></svg>
 <svg id="legend" width="700" height="120"></svg>
+<svg id="graph2" width="650" height="400"></svg>
+<svg id="legend2" width="120" height="400"></svg>
+<svg id="graph3" width="650" height="312"></svg>
+
 
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script>
@@ -37,6 +70,24 @@
     /**
      *  Entry point
      */
+
+    const colors = [
+        "rgb(0, 171, 169)",
+        "rgb(0, 80, 239)",
+        "rgb(170, 0, 255)",
+        "rgb(244, 114, 208)",
+        "rgb(216, 0, 115)",
+        "rgb(162, 0, 37)",
+        "rgb(250, 104, 0)",
+        "rgb(130, 90, 44)",
+        "rgb(109, 135, 100)",
+        "rgb(100, 118, 135)",
+        "rgb(15, 48, 87)",
+        "rgb(99, 57, 62)",
+        "rgb(235, 99, 97)",
+        "rgb(250, 202, 155)",
+        "rgb(96, 100, 109)"
+    ];
 
     function randomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -47,19 +98,38 @@
         return [Math.floor(Math.cos((Math.PI/2)-angle)*radius+center[0]), Math.floor(Math.sin((Math.PI/2)-angle)*radius+center[1])];
     }
 
-    function map(x) {
-        const y1 = 255;
-        const x2 = 20;
-        if (x > 20)
-            return 0;
-        return -y1/x2*x + y1;
+
+    // Linear Interpolation
+    function map(x, x1, x2, y1, y2) {
+        return ((y2-y1)/(x2-x1))*x+y1;
+    }
+
+    function findRightBottomMostPerson(personsMapPositions) {
+        let maxPosition = [0, 0];
+        for (let personName in personsMapPositions)
+        {
+            if (personsMapPositions[personName].x > maxPosition[0] &&  personsMapPositions[personName].y > maxPosition[1])
+            {
+                maxPosition = [personsMapPositions[personName].x, personsMapPositions[personName].y];
+            }
+        }
+        return maxPosition;
     }
 
 
+
     let personsPositions = {};
-    let personsColors = {};
+    let personsColorsByHeightDelta = {};
     let personsAges = {};
+    let personsMapPositions = {};
+    let personsAlibi = {};
+    let personsMetiers = {};
+    let personsPermis = {};
+    let personsVision = {};
+
+    let metiersColors = {};
     const svgContainer = d3.select("#graph1");
+    const svgContainer2 = d3.select("#graph2");
     const circleRadius = 10;
 
 
@@ -224,6 +294,73 @@
             .style("font-size", "12")
             .text("avec la victime (cm)");
 
+        let legend2 = d3.select("#legend2");
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .attr("x", "15")
+            .attr("y", "25")
+            .style("font-weight", "bold")
+            .text("Légende :");
+
+        let alibiXPos = 15;
+        for (let i = 10; i >= 0; i--) {
+            legend2.append("circle")
+                .attr("cx", alibiXPos)
+                .attr("cy", "120")
+                .attr("r", circleRadius+map(i, 0, 10, 10, -5))
+                .attr("stroke", "black")
+                .attr("fill", "white");
+            alibiXPos += 7;
+        }
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .style("text-anchor", "middle")
+            .attr("x", "60")
+            .attr("y", "90")
+            .style("font-size", "12")
+            .text("Qualité de l'alibi");
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .attr("x", "5")
+            .attr("y", "160")
+            .style("font-size", "10")
+            .style("font-weight", "bold")
+            .text("10");
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .attr("x", "85")
+            .attr("y", "160")
+            .style("font-size", "10")
+            .style("font-weight", "bold")
+            .text("0");
+
+        legend2.append("svg:image")
+            .attr("x", "45")
+            .attr("y", "230")
+            .attr("width", "30")
+            .attr("height", "30")
+            .attr("xlink:href", "ressources/gun.png");
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .attr("x", "60")
+            .attr("y", "270")
+            .style("font-size", "10")
+            .style("text-anchor", "middle")
+            .text("Port d'arme possédé");
+
+        legend2.append("text")
+            .attr("fill", "black")
+            .attr("x", "60")
+            .attr("y", "290")
+            .style("font-size", "10")
+            .style("text-anchor", "middle")
+            .text("par le suspect");
+
 
         d3.json("ressources/db.json").then((data) => {
             db = data;
@@ -243,19 +380,64 @@
                 }
                 else {
                     coordinates = generateCoordinates(center, radius, angle);
-                    angle += (2*Math.PI)/(persons.length-1); // -1 to remove the victim who is placed in the center
+                    angle += (2 * Math.PI) / (persons.length - 1); // -1 to remove the victim who is placed in the center
                 }
 
                 personsPositions[person.name] = coordinates;
 
                 // STORING COLOR DEPENDING ON HEIGHT
                 const heightDelta = Math.abs(person.taille - victimHeight);
-                personsColors[person.name] = map(heightDelta);
+                personsColorsByHeightDelta[person.name] = Math.min(map(heightDelta, 0, 20, 255, 0), 255);
 
                 // STORING AGE
                 personsAges[person.name] = person.age;
 
+                // STORING MAP COORDINATES
+                personsMapPositions[person.name] = person.position;
+
+                // STORING ALIBI
+                personsAlibi[person.name] = person.alibi;
+
+                // STORING PROFESSIONS
+                personsMetiers[person.name] = person.metier;
+
+                // ASSIGNING COLORS TO PROFESSIONS
+                if (!(person.metier in metiersColors))
+                {
+                    metiersColors[person.metier] = colors[Object.keys(metiersColors).length];
+                }
+
+                // STORING GUN LICENCES
+                personsPermis[person.name] = person.permisArme;
+
+                // STORING PERSONS VISIONS
+                personsVision[person.name] = person.vision;
+
             }
+
+            // MAP ALL PERSONS POSITIONS SO THAT THE MOST RIGHT BOTTOM PERSON IS IN THE BOTTOM RIGHT CORNER OF THE CANVAS
+            let maxPos = findRightBottomMostPerson(personsMapPositions);
+            for (let personName in personsMapPositions)
+            {
+                personsMapPositions[personName].x = map(personsMapPositions[personName].x, 0, maxPos[0], 0, 620);
+                personsMapPositions[personName].y = map(personsMapPositions[personName].y, 0, maxPos[1], 0, 330);
+            }
+
+            // TITLE GRAPH 1
+            let title = svgContainer.append("text")
+                .attr("fill", "black")
+                .attr("x", "20")
+                .attr("y", "25")
+                .style("font-weight", "bold")
+                .text("Graphe de relations");
+
+            // TITLE GRAPH 2
+            let title2 = svgContainer2.append("text")
+                .attr("fill", "black")
+                .attr("x", "470")
+                .attr("y", "25")
+                .style("font-weight", "bold")
+                .text("Graphe des alibis");
 
             for (let link of links) {
                 let line = svgContainer.append("line")
@@ -291,37 +473,142 @@
                     line.attr("stroke-width", "3");
             }
 
+            let victim = svgContainer2.append("rect")
+                .attr("x", personsMapPositions[victimeName].x-15)
+                .attr("y", personsMapPositions[victimeName].y-15)
+                .attr("width", "30")
+                .attr("height", "30")
+                .attr("fill", metiersColors[personsMetiers[victimeName]])
+                .on("mouseover", function() {
+                    d3.select("#"+victimeName).style("visibility", "visible");
+                    d3.select("#"+victimeName+"_tag").style("visibility", "visible");
+                    d3.select("#"+victimeName+"_age").style("visibility", "visible");
+                    d3.select("#"+victimeName+"2").style("visibility", "visible");
+                    d3.select("#"+victimeName+"_tag2").style("visibility", "visible");
+                    d3.select("#"+victimeName+"_metier").style("visibility", "visible");
+                    d3.select(this).style("cursor", "pointer");
+                })
+                .on("mouseleave", function() {
+                    d3.select("#"+victimeName).style("visibility", "hidden");
+                    d3.select("#"+victimeName+"_tag").style("visibility", "hidden");
+                    d3.select("#"+victimeName+"_age").style("visibility", "hidden");
+                    d3.select("#"+victimeName+"2").style("visibility", "hidden");
+                    d3.select("#"+victimeName+"_tag2").style("visibility", "hidden");
+                    d3.select("#"+victimeName+"_metier").style("visibility", "hidden");
+                    d3.select(this).style("cursor", "default");
+                });
+
             for (let personName in personsPositions) {
                 const coordinates = personsPositions[personName];
+                const mapCoordinates = personsMapPositions[personName];
                 let circle = svgContainer.append("circle")
                     .attr("cx", coordinates[0])
                     .attr("cy", coordinates[1])
                     .attr("r", circleRadius)
                     .attr("stroke", "black")
                     .attr("fill", function () {
-                        return d3.rgb(personsColors[personName], 0, 0);
+                        return d3.rgb(personsColorsByHeightDelta[personName], 0, 0);
                     })
                     .on("mouseover", function() {
                         d3.select("#"+personName).style("visibility", "visible");
                         d3.select("#"+personName+"_tag").style("visibility", "visible");
                         d3.select("#"+personName+"_age").style("visibility", "visible");
+                        d3.select("#"+personName+"2").style("visibility", "visible");
+                        d3.select("#"+personName+"_tag2").style("visibility", "visible");
+                        d3.select("#"+personName+"_metier").style("visibility", "visible");
                         d3.select(this).style("cursor", "pointer");
                     })
                     .on("mouseleave", function() {
                         d3.select("#"+personName).style("visibility", "hidden");
                         d3.select("#"+personName+"_tag").style("visibility", "hidden");
                         d3.select("#"+personName+"_age").style("visibility", "hidden");
+                        d3.select("#"+personName+"2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_metier").style("visibility", "hidden");
                         d3.select(this).style("cursor", "default");
                     });
+
+
+                let circle2 = svgContainer2.append("circle")
+                    .attr("cx", mapCoordinates.x)
+                    .attr("cy", mapCoordinates.y)
+                    .attr("r", circleRadius+map(personsAlibi[personName], 0, 10, 10, -5))
+                    .attr("stroke", "black")
+                    .attr("visibility", function() {
+                        if (personName === victimeName)
+                            return "hidden";
+                        return "visible";
+                    })
+                    .attr("fill", function () {
+                        return metiersColors[personsMetiers[personName]];
+                    })
+                    .on("mouseover", function() {
+                        d3.select("#"+personName).style("visibility", "visible");
+                        d3.select("#"+personName+"_tag").style("visibility", "visible");
+                        d3.select("#"+personName+"_age").style("visibility", "visible");
+                        d3.select("#"+personName+"2").style("visibility", "visible");
+                        d3.select("#"+personName+"_tag2").style("visibility", "visible");
+                        d3.select("#"+personName+"_metier").style("visibility", "visible");
+                        d3.select(this).style("cursor", "pointer");
+                    })
+                    .on("mouseleave", function() {
+                        d3.select("#"+personName).style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag").style("visibility", "hidden");
+                        d3.select("#"+personName+"_age").style("visibility", "hidden");
+                        d3.select("#"+personName+"2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_metier").style("visibility", "hidden");
+                        d3.select(this).style("cursor", "default");
+                    });
+
+                let pistols = svgContainer2.append("svg:image")
+                    .attr("xlink:href", "ressources/gun.png")
+                    .attr("height", function() {
+                        if (personName === victimeName)
+                            return "15";
+                        return circleRadius+map(personsAlibi[personName], 0, 10, 10, -5)
+                    })
+                    .attr("width", function () {
+                        if (personName === victimeName)
+                            return "15";
+                        return circleRadius+map(personsAlibi[personName], 0, 10, 10, -5)
+                    })
+                    .attr("x", mapCoordinates.x)
+                    .attr("y", mapCoordinates.y)
+                    .style("visibility", function() {
+                        if (personsPermis[personName] === "non")
+                            return "hidden";
+                        return "visible";
+                    })
+                    .on("mouseover", function() {
+                        d3.select("#"+personName).style("visibility", "visible");
+                        d3.select("#"+personName+"_tag").style("visibility", "visible");
+                        d3.select("#"+personName+"_age").style("visibility", "visible");
+                        d3.select("#"+personName+"2").style("visibility", "visible");
+                        d3.select("#"+personName+"_tag2").style("visibility", "visible");
+                        d3.select("#"+personName+"_metier").style("visibility", "visible");
+                        d3.select(this).style("cursor", "pointer");
+                    })
+                    .on("mouseleave", function() {
+                        d3.select("#"+personName).style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag").style("visibility", "hidden");
+                        d3.select("#"+personName+"_age").style("visibility", "hidden");
+                        d3.select("#"+personName+"2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_tag2").style("visibility", "hidden");
+                        d3.select("#"+personName+"_metier").style("visibility", "hidden");
+                        d3.select(this).style("cursor", "default");
+                    });
+
             }
 
             for (let personName in personsPositions) {
                 const coordinates = personsPositions[personName];
+                const coordinates2 = personsMapPositions[personName];
                 let tooltip = svgContainer.append("rect")
-                    .attr("x", coordinates[0] - 40)
+                    .attr("x", coordinates[0] - 45)
                     .attr("y", coordinates[1] - 60)
                     .attr("height", 40)
-                    .attr("width", 80)
+                    .attr("width", 90)
                     .attr("fill", "rgb(190, 190, 190)")
                     .attr("stroke", "black")
                     .style("visibility", "hidden")
@@ -344,6 +631,121 @@
                     .style("visibility", "hidden")
                     .style("font-size", 12)
                     .style("text-anchor", "middle");
+
+                let tooltip2 = svgContainer2.append("rect")
+                    .attr("x", coordinates2.x - 45)
+                    .attr("y", coordinates2.y - 60)
+                    .attr("height", 40)
+                    .attr("width", 90)
+                    .attr("fill", "rgb(190, 190, 190)")
+                    .attr("stroke", "black")
+                    .style("visibility", "hidden")
+                    .attr("id", personName+"2");
+                let nametag2 = svgContainer2.append("text")
+                    .attr("x", coordinates2.x)
+                    .attr("y", coordinates2.y - 46)
+                    .attr("fill", "black")
+                    .text(personName)
+                    .attr("id", function() {return personName+"_tag2"})
+                    .style("visibility", "hidden")
+                    .style("font-size", 12)
+                    .style("text-anchor", "middle");
+                let metiertag = svgContainer2.append("text")
+                    .attr("x", coordinates2.x)
+                    .attr("y", coordinates2.y - 26)
+                    .style("font-weight", "bold")
+                    .attr("fill", function() {
+                        return metiersColors[personsMetiers[personName]];
+                    })
+                    .text(personsMetiers[personName])
+                    .attr("id", function() {return personName+"_metier"})
+                    .style("visibility", "hidden")
+                    .style("font-size", 12)
+                    .style("text-anchor", "middle");
+            }
+
+            let svgContainer3 = d3.select("#graph3");
+
+
+            // TITLE GRAPH 3
+            let title3 = svgContainer3.append("text")
+                .attr("fill", "black")
+                .attr("x", "450")
+                .attr("y", "25")
+                .style("font-weight", "bold")
+                .text("Graphe des visions");
+
+
+            const startX = 35;
+            const startY = 270;
+            const stopY = 30;
+            const stopX = 625;
+
+            let x = startX;
+
+            const verticalGrad = Math.floor((startY-stopY)/10);
+            const barWidth = Math.floor((stopX-startX)/(Object.keys(personsVision).length-1));
+
+            let gradient = svgContainer3
+                .append("linearGradient")
+                .attr("y1", startY)
+                .attr("y2", stopY)
+                .attr("x1", 0)
+                .attr("x2", 0)
+                .attr("id", "gradient2")
+                .attr("gradientUnits", "userSpaceOnUse");
+
+            gradient
+                .append("stop")
+                .attr("offset", "0")
+                .attr("stop-color", "rgb(0, 200, 0)");
+
+            gradient
+                .append("stop")
+                .attr("offset", "0.5")
+                .attr("stop-color", "#f00");
+
+            for (let personName in personsVision)
+            {
+                let bars = svgContainer3.append("rect")
+                    .attr("fill", "url(#gradient2)")
+                    .attr("stroke", "black")
+                    .attr("x", x)
+                    .attr("y", startY-map(personsVision[personName], 0, 10, 2, startY-stopY))
+                    .attr("width", barWidth)
+                    .attr("height", map(personsVision[personName], 0, 10, 2, startY-stopY));
+                x += barWidth;
+            }
+
+            let axe1 = svgContainer3.append("line")
+                .attr("x1", startX-15)
+                .attr("x2", startX-15)
+                .attr("y1", startY+30)
+                .attr("y2", stopY-10)
+                .attr("stroke", "black");
+
+            let axe2 = svgContainer3.append("line")
+                .attr("x1", startX-30)
+                .attr("x2", stopX+15)
+                .attr("y1", startY+10)
+                .attr("y2", startY+10)
+                .attr("stroke", "black");
+
+            for (let i = 1; i <= 10; i++) {
+                let grad = svgContainer3.append("line")
+                    .attr("x1", startX-13)
+                    .attr("x2", startX-17)
+                    .attr("y1", startY-i*verticalGrad)
+                    .attr("y2", startY-i*verticalGrad)
+                    .attr("stroke", "black");
+
+                let gradLabel = svgContainer3.append("text")
+                    .text(i)
+                    .attr("x", startX-25)
+                    .attr("y", startY-i*verticalGrad+3)
+                    .style("font-size", "10")
+                    .style("text-anchor", "middle")
+                    .attr("fill", "black");
             }
 
         });
