@@ -102,6 +102,10 @@
             border-left: 1px solid black;
         }
 
+        h1.synthese {
+            color: dimgray;
+        }
+
         p, b {
             margin-left: 8px;
             margin-right: 8px;
@@ -134,8 +138,8 @@
         <p>J'ai choisi de représenter tous les suspects en cercle avec la victime au milieu pour avoir une meilleure
             vision de quelle personne est liée à quelle autre personne.</p>
         <p>Chaque personne sur ce graphe est représenté par une nuance de rouge qui représente son écart de taille
-        avec la victime. Plus le rouge est vif, plus la taille du suspect est proche de celle de la victime, ainsi
-        on peut voir en un coup d'oeil les personnes qui ont une taille incriminante dans cette affaire.</p>
+            avec la victime. Plus le rouge est vif, plus la taille du suspect est proche de celle de la victime, ainsi
+            on peut voir en un coup d'oeil les personnes qui ont une taille incriminante dans cette affaire.</p>
         <b>Adaptation aux données :</b>
         <p>Le cercle de suspect peut s'adapter à n'importe quel set de données (sauf s'il y a trop de suspect, le graphe
             deviendrait illisible). En revanche, le graphe ne s'adaptera pas si de nouveaux types de liens font leur
@@ -143,41 +147,68 @@
         </p>
         <b>Déductions permises par ce graphe :</b>
         <p>En passant la souris sur Amélie (la soeur de la victime), on se rend compte qu'elle est en couple avec
-        Kévin l'ex de la victime. De plus, on déduit par la teinte du "jeton" Amélie qu'elle fait exactement la même taille que la victime.
-        On peut alors supposer grâce à ce graphe qu'Amélie ou Kévin auraient pu trouver une arme pour tuer Annie.</p>
+            Kévin l'ex de la victime. De plus, on déduit par la teinte du "jeton" Amélie qu'elle fait exactement la même
+            taille que la victime.
+            On peut alors supposer grâce à ce graphe qu'Amélie ou Kévin auraient pu trouver une arme pour tuer
+            Annie.</p>
+        <h1 class="synthese">Synthèse des informations :</h1>
+        <p>Le fait que les 3 graphes soient reliés par le passage de la souris sur le jeton d'un suspect permet d'avoir
+            accès à toutes les informations sur la personne en même temps, sur tous les graphes. Par exemple, si on
+            passe la
+            souris sur Marie, on apprend qu'elle a 63 ans, que c'est une voisine de Annie mais qu'elle est bien plus
+            petite qu'elle, qu'elle est retraitée, qu'elle se trouvait très proche de la victime au moment du meurtre,
+        et qu'elle n'a pas un alibi très solide, elle n'a pas le port d'arme, et enfin elle a une vision très basse.</p>
     </div>
     <div id="justif-graph2">
         <h2>Graphe 2 :</h2>
         <b>Explications :</b>
         <p>Le deuxième graphe est une représentation spatiale vue du dessus de la position supposée des suspects
-        au moment du meurtre. Ce graphe montre également la solidité de l'alibi de chacun en augmentant la taille
-        du jeton qui représente chaque suspect. Plus le jeton est gros, plus l'alibi est mauvais. Alors, les suspects
-        qui se trouvaient proches de la victime (jeton carré) au moment du meurte, et qui ont un gros jeton sont
-        les principaux suspects présentés par ce graphe</p>
+            au moment du meurtre. Ce graphe montre également la solidité de l'alibi de chacun en augmentant la taille
+            du jeton qui représente chaque suspect. Plus le jeton est gros, plus l'alibi est mauvais. Alors, les
+            suspects
+            qui se trouvaient proches de la victime (jeton carré) au moment du meurte, et qui ont un gros jeton sont
+            les principaux suspects présentés par ce graphe</p>
         <p>On peut aussi voir facilement qui possède un port d'arme, et donc potentiellement une arme en regardant
-        les petits pistolets placés sur les jetons des personnes.</p>
+            les petits pistolets placés sur les jetons des personnes.</p>
         <p>Enfin, chaque jeton est dessiné dans une couleur qui représente son métier, que l'on peut voir en passant
-        la souris sur un jeton.</p>
+            la souris sur un jeton.</p>
         <b>Adaptation aux données :</b>
         <p>Les coordonnées de tous les protagonistes s'étendent automatiquement à la taille de la carte, on peut donc
-        représenter des sets de données qui utilisent des coordonnées qui ont des ordres de grandeurs différents de
-        ceux de cette base de données. Le personnage dont les coordonées X et Y sont les plus grandes sera affiché
-        en bas à droite de la carte, et les autres seront représentés à l'échelle.</p>
+            représenter des sets de données qui utilisent des coordonnées qui ont des ordres de grandeurs différents de
+            ceux de cette base de données. Le personnage dont les coordonées X et Y sont les plus grandes sera affiché
+            en bas à droite de la carte, et les autres seront représentés à l'échelle.</p>
         <p>Chaque profession est représentée par une couleur prédéfinie, il y en a 15 à ce jour, donc on peut utiliser
-        une set de données qui présente au plus 15 professions différentes.</p>
+            une set de données qui présente au plus 15 professions différentes.</p>
         <p>Enfin, on suppose que l'alibi sera toujours noté de 0 à 10.</p>
         <b>Déductions permises par ce graphe :</b>
         <p>Grâce à ce graphe, on voit que plusieurs personnes se trouvaient à proximité d'Annie au moment du meurtre, et
-        n'ont pas de bons alibis (ex: Roger, Marie, Nicole, Amélie...). On se rend compte qu'Amélie ne possède pas
-        de port d'arme. En revanche, Kévin, bien qu'il se trouvait loin de la victime, en possède un. On peut supposer
-        que Kévin aurait pu prêter son arme à sa conjointe Amélie pour tuer sa soeur.</p>
+            n'ont pas de bons alibis (ex: Roger, Marie, Nicole, Amélie...). On se rend compte qu'Amélie ne possède pas
+            de port d'arme. En revanche, Kévin, bien qu'il se trouvait loin de la victime, en possède un. On peut
+            supposer
+            que Kévin aurait pu prêter son arme à sa conjointe Amélie pour tuer sa soeur.</p>
         <p>On ne peut pas déduire grand chose à partir de la profession des protagonistes.</p>
         <p></p>
     </div>
     <div id="justif-graph3">
         <h2>Graphe 3 :</h2>
         <b>Explications :</b>
-        <p>Coucou</p>
+        <p>Le dernier graphe représente la vision de chaque protagoniste sous forme de bar chart. Plus le haut de la
+            barre est vert, moins la personne a de chances d'avoir tué la victime car sa vision est bien trop faible.
+            En passant la souris sur une des barres, on voit le nom de la personne concernée, ainsi que si elle possède
+            le permis de port d'arme.</p>
+        <b>Adaptation aux données :</b>
+        <p>Ce graphe également peut se baser sur n'importe quelle base de données (pourvue qu'elle ne soit pas immense).
+            En effet, le graphe entier prend une place fixe, et si on rajoute des nouvelles personnes, les barres vont
+            se
+            serrer pour faire de la place à la nouvelle barre.</p>
+        <p>On suppose encore une fois que la vision sera toujours notée de 0 à 10.</p>
+        <b>Déductions permises par ce graphes :</b>
+        <p>A partir de ce graphe, on peut trouver tous les gens qui ont le plus de chances d'avoir effectivement tiré
+            sur la victime, en regardant ceux qui ont la meilleure vision (8 en l'occurence). On remarque encore une
+            fois
+            que le sort ne joue pas en la faveur d'Amélie, qui a une très bonne vision, ce qui renforce nos soupsons à
+            son
+            égard.</p>
     </div>
 </div>
 
@@ -633,6 +664,7 @@
                         d3.select("#" + personName + "3").style("visibility", "visible");
                         d3.select("#" + personName + "_tag3").style("visibility", "visible");
                         d3.select("#" + personName + "_dash").style("visibility", "visible");
+                        d3.select("#" + personName + "_metier").style("visibility", "visible");
                         d3.select("#" + personName + "_arme").style("visibility", "visible");
                         d3.select(this).style("cursor", "pointer");
                     })
