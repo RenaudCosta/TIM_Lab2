@@ -61,6 +61,30 @@
             top: 413px;
             left: 1365px;
             border: 1px solid black;
+            background-color: #dddddd;
+        }
+
+        #controls button {
+            display: block;
+            width: auto;
+            max-width: 100px;
+            margin: 10px auto 10px auto;
+            background-color: lightgrey;
+            border: none;
+            color: black;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            overflow-x: hidden;
+            font-size: 14px;
+        }
+
+        #controls button:hover {
+            cursor: pointer;
+        }
+
+        #controls h1 {
+            margin-left: 25px;
         }
 
         h1 {
@@ -124,7 +148,8 @@
 <svg id="legend2" width="120" height="400"></svg>
 <svg id="graph3" width="650" height="312"></svg>
 <div id="controls">
-    <h1>Controles :</h1>
+    <!--<h1>Filtres :</h1>
+    <button onClick="toggleLinks()">Liens</button>-->
 </div>
 <div id="justification">
     <h1>Justifications :</h1>
@@ -151,13 +176,6 @@
             taille que la victime.
             On peut alors supposer grâce à ce graphe qu'Amélie ou Kévin auraient pu trouver une arme pour tuer
             Annie.</p>
-        <h1 class="synthese">Synthèse des informations :</h1>
-        <p>Le fait que les 3 graphes soient reliés par le passage de la souris sur le jeton d'un suspect permet d'avoir
-            accès à toutes les informations sur la personne en même temps, sur tous les graphes. Par exemple, si on
-            passe la
-            souris sur Marie, on apprend qu'elle a 63 ans, que c'est une voisine de Annie mais qu'elle est bien plus
-            petite qu'elle, qu'elle est retraitée, qu'elle se trouvait très proche de la victime au moment du meurtre,
-        et qu'elle n'a pas un alibi très solide, elle n'a pas le port d'arme, et enfin elle a une vision très basse.</p>
     </div>
     <div id="justif-graph2">
         <h2>Graphe 2 :</h2>
@@ -209,11 +227,18 @@
             que le sort ne joue pas en la faveur d'Amélie, qui a une très bonne vision, ce qui renforce nos soupsons à
             son
             égard.</p>
+        <h1 class="synthese">Synthèse des informations :</h1>
+        <p>Le fait que les 3 graphes soient reliés par le passage de la souris sur le jeton d'un suspect permet d'avoir
+            accès à toutes les informations sur la personne en même temps, sur tous les graphes. Par exemple, si on
+            passe la
+            souris sur Marie, on apprend qu'elle a 63 ans, que c'est une voisine de Annie mais qu'elle est bien plus
+            petite qu'elle, qu'elle est retraitée, qu'elle se trouvait très proche de la victime au moment du meurtre,
+            et qu'elle n'a pas un alibi très solide, elle n'a pas le port d'arme, et enfin elle a une vision très basse.</p>
     </div>
 </div>
 
 
-<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="d3/d3.min.js"></script>
 <script>
     "use strict";
     /**
@@ -238,15 +263,45 @@
         "rgb(96, 100, 109)"
     ];
 
-    function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
+    function toggleLinks() {
+
     }
 
+    // function from: https://stackoverflow.com/questions/486896/adding-a-parameter-to-the-url-with-javascript
+    function insertParam(key, value)
+    {
+        key = encodeURI(key); value = encodeURI(value);
+
+        var kvp = document.location.search.substr(1).split('&');
+
+        var i=kvp.length; var x; while(i--)
+    {
+        x = kvp[i].split('=');
+
+        if (x[0]==key)
+        {
+            x[1] = value;
+            kvp[i] = x.join('=');
+            break;
+        }
+    }
+
+        if(i<0) {kvp[kvp.length] = [key,value].join('=');}
+
+        //this will reload the page, it's likely better to store this until finished
+        document.location.search = kvp.join('&');
+    }
+
+    // function from: https://stackoverflow.com/questions/814613/how-to-read-get-data-from-a-url-using-javascript
+    function $_GET(q,s) {
+        s = (s) ? s : window.location.search;
+        let re = new RegExp('&amp;'+q+'=([^&amp;]*)','i');
+        return (s=s.replace(/^\?/,'&amp;').match(re)) ?s=s[1] :s='0';
+    }
 
     function generateCoordinates(center, radius, angle) {
         return [Math.floor(Math.cos((Math.PI / 2) - angle) * radius + center[0]), Math.floor(Math.sin((Math.PI / 2) - angle) * radius + center[1])];
     }
-
 
     // Linear Interpolation
     function map(x, x1, x2, y1, y2) {
@@ -311,7 +366,7 @@
             .attr("x", "90")
             .attr("y", "63")
             .style("font-size", "11")
-            .text("Relation de travail");
+            .text("Travail");
 
         legend.append("line")
             .attr("x1", "20")
@@ -516,6 +571,7 @@
             let victimeName;
             let victimHeight;
             let angle = 0;
+
             for (let person of persons) {
 
                 let coordinates;
@@ -578,10 +634,10 @@
             // TITLE GRAPH 2
             let title2 = svgContainer2.append("text")
                 .attr("fill", "black")
-                .attr("x", "470")
+                .attr("x", "445")
                 .attr("y", "25")
                 .style("font-weight", "bold")
-                .text("Graphe des alibis");
+                .text("Graphe des positions");
 
             for (let link of links) {
                 let line = svgContainer.append("line")
